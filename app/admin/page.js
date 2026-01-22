@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { auth, db, storage } from '@/lib/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Trash2, Edit2, X, Calendar, Clock, MapPin, User, FileText, Globe, image as ImageIcon, Video, Upload, AlertCircle, Users } from 'lucide-react';
@@ -14,7 +14,6 @@ export default function AdminPage() {
     const [user, setUser] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isRegistering, setIsRegistering] = useState(false);
 
     // Content Management State
     const [noticeContent, setNoticeContent] = useState('');
@@ -115,11 +114,10 @@ export default function AdminPage() {
 
         try {
             let userCredential;
-            if (isRegistering) {
-                userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            } else {
-                userCredential = await signInWithEmailAndPassword(auth, email, password);
-            }
+
+            // Only login allowed
+            userCredential = await signInWithEmailAndPassword(auth, email, password);
+
             setUser(userCredential.user);
         } catch (err) {
             console.error(err);
@@ -890,7 +888,7 @@ export default function AdminPage() {
         );
     }
 
-    // Login Form (Unchanged)
+    // Login Form (Strictly Sign In Only)
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
@@ -929,20 +927,12 @@ export default function AdminPage() {
                         disabled={loading}
                         className="w-full bg-kumkum text-white py-2 rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
                     >
-                        {loading ? 'Processing...' : (isRegistering ? 'Register' : 'Login')}
+                        {loading ? 'Processing...' : 'Login'}
                     </button>
 
-                    <div className="text-sm text-gray-500 mt-4">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsRegistering(!isRegistering);
-                                setError('');
-                            }}
-                            className="text-kumkum hover:underline font-medium"
-                        >
-                            {isRegistering ? 'Already have an account? Login' : 'Need an account? Register'}
-                        </button>
+                    {/* Registration Removed: Only authorized users can login */}
+                    <div className="text-sm text-gray-400 mt-4">
+                        Authorized Personnel Only
                     </div>
                 </form>
             </div>
