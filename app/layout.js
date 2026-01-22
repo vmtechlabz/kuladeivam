@@ -15,6 +15,9 @@ const robotoMono = Roboto_Mono({
 export const metadata = {
     title: "ஸ்ரீ தேவி பூதேவி சமேத ஸ்ரீ வரதராஜப் பெருமாள் திருக்கோவில் - செட்டிகுறிச்சி, திருநெல்வேலி",
     description: "ஸ்ரீ தேவி பூதேவி சமேத ஸ்ரீ வரதராஜப் பெருமாள் திருக்கோவில் அதிகாரப்பூர்வ இணையதளம்",
+    icons: {
+        icon: '/1.png',
+    },
 };
 
 export default function RootLayout({ children }) {

@@ -41,8 +41,8 @@ export default function AdminPage() {
     const [sponsorPermanentAddress, setSponsorPermanentAddress] = useState('');
     const [poojaDescription, setPoojaDescription] = useState('');
     // Tamil Date State
-    const [tamilMonth, setTamilMonth] = useState('தை');
-    const [tamilDay, setTamilDay] = useState('1');
+    const [tamilMonth, setTamilMonth] = useState('');
+    const [tamilDay, setTamilDay] = useState('');
 
     const tamilMonths = [
         "சித்திரை", "வைகாசி", "ஆனி", "ஆடி", "ஆவணி", "புரட்டாசி",
@@ -212,6 +212,12 @@ export default function AdminPage() {
         const finalSponsor = poojaSponsor.trim().endsWith('குடும்பத்தார்') ? poojaSponsor : `${poojaSponsor} குடும்பத்தார்`;
         const finalSponsor2 = poojaSponsor2.trim() ? (poojaSponsor2.trim().endsWith('குடும்பத்தார்') ? poojaSponsor2 : `${poojaSponsor2} குடும்பத்தார்`) : '';
 
+        // Construct Tamil Month Date only if both are selected
+        let finalTamilDate = '';
+        if (tamilMonth && tamilDay) {
+            finalTamilDate = `${tamilMonth} ${tamilDay}`;
+        }
+
         const poojaData = {
             title: finalTitle,
             date: poojaDate,
@@ -222,7 +228,7 @@ export default function AdminPage() {
             sponsorCurrentAddress,
             sponsorPermanentAddress,
             description: poojaDescription,
-            tamilMonthDate: `${tamilMonth} ${tamilDay}`,
+            tamilMonthDate: finalTamilDate, // Can be empty string now
             updatedAt: serverTimestamp()
         };
 
@@ -258,6 +264,11 @@ export default function AdminPage() {
         setSponsorCurrentAddress(pooja.sponsorCurrentAddress || '');
         setSponsorPermanentAddress(pooja.sponsorPermanentAddress || '');
         setPoojaDescription(pooja.description || '');
+
+        // Reset defaults
+        setTamilMonth('');
+        setTamilDay('');
+
         if (pooja.tamilMonthDate) {
             const parts = pooja.tamilMonthDate.split(' ');
             if (parts.length >= 2) {
@@ -284,8 +295,8 @@ export default function AdminPage() {
         setSponsorCurrentAddress('');
         setSponsorPermanentAddress('');
         setPoojaDescription('');
-        setTamilMonth('தை');
-        setTamilDay('1');
+        setTamilMonth(''); // Start empty
+        setTamilDay('');   // Start empty
         setPoojaEditingId(null);
         setPoojaStatus('');
     };
@@ -640,12 +651,22 @@ export default function AdminPage() {
 
                                     {/* Tamil Date */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Tamil Date</label>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Tamil Date (Optional)</label>
                                         <div className="flex gap-4">
-                                            <select value={tamilMonth} onChange={(e) => setTamilMonth(e.target.value)} className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-40">
+                                            <select
+                                                value={tamilMonth}
+                                                onChange={(e) => setTamilMonth(e.target.value)}
+                                                className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-40"
+                                            >
+                                                <option value="">Select Month</option>
                                                 {tamilMonths.map(m => <option key={m} value={m}>{m}</option>)}
                                             </select>
-                                            <select value={tamilDay} onChange={(e) => setTamilDay(e.target.value)} className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-20">
+                                            <select
+                                                value={tamilDay}
+                                                onChange={(e) => setTamilDay(e.target.value)}
+                                                className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-20"
+                                            >
+                                                <option value="">Day</option>
                                                 {tamilDays.map(d => <option key={d} value={d}>{d}</option>)}
                                             </select>
                                         </div>

@@ -12,17 +12,19 @@ export default function Hero() {
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/80"></div>
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto text-center px-4 sm:px-6 lg:px-8 mt-72">
+            <div className="relative z-10 max-w-7xl mx-auto text-center px-4 sm:px-6 lg:px-8 mt-60">
                 {/* Thirunamam Logo */}
-                <div className="flex justify-center mb-8">
-                    <svg viewBox="0 0 100 100" className="w-20 h-20 drop-shadow-2xl filter" style={{ filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))' }}>
-                        {/* Outer Namam (White) */}
-                        <path d="M25,10 L25,55 C25,85 75,85 75,55 L75,10" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                        {/* Inner Sreechurnam (Red) */}
-                        <line x1="50" y1="15" x2="50" y2="85" stroke="#C41E3A" strokeWidth="6" strokeLinecap="round" />
-                    </svg>
+                {/* Custom Flame/Conch Logo Image */}
+                <div className="flex justify-center" style={{ marginTop: '60px' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src="/1.png"
+                        alt="Temple Logo"
+                        className="w-32 h-32 object-contain drop-shadow-2xl filter hover:scale-105 transition-transform duration-300"
+                        style={{ filter: 'drop-shadow(0 0 15px rgba(255, 107, 0, 0.4))' }}
+                    />
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white drop-shadow-2xl tracking-wide leading-tight">
+                <h1 className="text-4xl md:text-6xl font-bold mb-2 text-white drop-shadow-2xl tracking-wide leading-tight">
                     ஸ்ரீ தேவி பூதேவி சமேத <br /> ஸ்ரீ வரதராஜப் பெருமாள் திருக்கோவில்
                 </h1>
                 <p className="text-xl md:text-3xl font-medium mb-10 text-amber-200 drop-shadow-lg">

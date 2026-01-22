@@ -18,6 +18,11 @@
     "react-dom": "19.2.3",
     "react-transliterate": "^1.1.9"
   },
+  "overrides": {
+    "react-transliterate": {
+      "react": "$react"
+    }
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

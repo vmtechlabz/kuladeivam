@@ -37,6 +37,8 @@ export default function Layout({ children }) {
                     <div className="flex h-16 items-center justify-between gap-8">
                         {/* Title Section - Allowed to shrink */}
                         <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/1.png" alt="Logo" className="w-20 h-20 object-contain drop-shadow-md" />
                             <span className="text-sm md:text-xl font-bold truncate">
                                 ஸ்ரீ தேவி பூதேவி சமேத ஸ்ரீ வரதராஜப் பெருமாள் திருக்கோவில்
                             </span>
