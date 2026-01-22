@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notices/{notice} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /poojas/{pooja} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /gallery/{item} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /committee/{member} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
