@@ -14,7 +14,7 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Welcome & Intro */}
                     <div className="text-center max-w-4xl mx-auto mb-16">
-                        <h2 className="mt-2 text-3xl md:text-4xl font-bold text-gray-900 mb-6">எங்கள் தெய்வீக மரபு</h2>
+                        <h2 className="mt-2 text-2xl md:text-4xl font-bold text-gray-900 mb-6">எங்கள் தெய்வீக மரபு</h2>
                         <p className="text-xl text-gray-600 leading-relaxed mb-4">
                             எங்கள் புனிதமான குலதெய்வம் கோவிலுக்கு உங்களை வரவேற்கிறோம். இறைவனின் ஆசீர்வாதம் எப்போதும் உங்களுடன் இருக்கட்டும்.
                         </p>
@@ -32,7 +32,7 @@ export default function Home() {
                             { label: "தினசரி ஆசீர்வாதம்", value: "∞" }
                         ].map((stat, index) => (
                             <div key={index} className="text-center">
-                                <div className="text-3xl md:text-4xl font-bold text-kumkum mb-2">{stat.value}</div>
+                                <div className="text-2xl md:text-4xl font-bold text-kumkum mb-2">{stat.value}</div>
                                 <div className="text-sm md:text-base text-gray-600 font-medium">{stat.label}</div>
                             </div>
                         ))}
@@ -42,7 +42,7 @@ export default function Home() {
                     <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
                         {/* History Column */}
                         <div className="bg-orange-50 rounded-2xl p-8 border border-orange-100">
-                            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                                 <span className="w-2 h-8 bg-kumkum rounded-full"></span>
                                 குலதெய்வத்தின் வரலாறு & முக்கியத்துவம்
                             </h3>
@@ -65,7 +65,7 @@ export default function Home() {
                         {/* Traditions Column */}
                         <div className="space-y-8">
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                                     <span className="w-2 h-8 bg-gold rounded-full"></span>
                                     வழிபாட்டு மரபுகள்
                                 </h3>

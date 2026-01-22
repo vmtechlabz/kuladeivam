@@ -93,7 +93,7 @@ export default function WeeklyPoojaHighlight() {
         <section className="py-12 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900 border-l-4 border-kumkum pl-4">
+                    <h2 className="text-xl md:text-3xl font-bold text-gray-900 border-l-4 border-kumkum pl-4">
                         {isCompleted ? "Recent Pooja" : "அடுத்த சிறப்பு பூஜை"}
                     </h2>
                     <Link href="/temple-details/weekly-pooja" className="text-kumkum hover:text-gold font-medium flex items-center gap-1">
@@ -110,7 +110,7 @@ export default function WeeklyPoojaHighlight() {
                     </div>
 
                     <div className="flex-grow">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">{displayTitle}</h3>
+                        <h3 className="text-lg md:text-2xl font-bold text-gray-800 mb-2">{displayTitle}</h3>
                         <p className="text-gray-600 mb-6">{nextPooja.description}</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
