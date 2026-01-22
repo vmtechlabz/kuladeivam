@@ -97,20 +97,33 @@ export default function WeeklyPoojaPage() {
                                         </div>
 
                                         <div className="flex items-center gap-3 text-gray-700 border-t border-gray-100 pt-3">
-                                            <User className={`w-5 h-5 shrink-0 ${isCompleted ? 'text-gray-500' : 'text-kumkum'}`} />
-                                            <div className="text-sm">
-                                                <span className="block font-semibold">{pooja.sponsor} {pooja.sponsor2 && `& ${pooja.sponsor2}`}</span>
-                                                {pooja.sponsorCurrentAddress && (
-                                                    <span className="block text-gray-500 text-xs mt-1">
-                                                        <span className={`font-semibold ${isCompleted ? 'text-gray-600' : 'text-kumkum'}`}>இருப்பு:</span> {pooja.sponsorCurrentAddress}
+                                            {pooja.title === 'சிவராத்திரி சிறப்பு பூஜை' && pooja.annadhanamDetails ? (
+                                                <div className="w-full">
+                                                    <span className={`block font-bold text-sm mb-1 ${isCompleted ? 'text-gray-600' : 'text-yellow-700'}`}>
+                                                        அன்னதானம் / சிறப்பு விவரங்கள்:
                                                     </span>
-                                                )}
-                                                {pooja.sponsorPermanentAddress && (
-                                                    <span className="block text-gray-500 text-xs mt-1">
-                                                        <span className={`font-semibold ${isCompleted ? 'text-gray-600' : 'text-kumkum'}`}>சொந்த ஊர்:</span> {pooja.sponsorPermanentAddress}
-                                                    </span>
-                                                )}
-                                            </div>
+                                                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed bg-yellow-50 p-2 rounded">
+                                                        {pooja.annadhanamDetails}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <User className={`w-5 h-5 shrink-0 ${isCompleted ? 'text-gray-500' : 'text-kumkum'}`} />
+                                                    <div className="text-sm">
+                                                        <span className="block font-semibold">{pooja.sponsor} {pooja.sponsor2 && `& ${pooja.sponsor2}`}</span>
+                                                        {pooja.sponsorCurrentAddress && (
+                                                            <span className="block text-gray-500 text-xs mt-1">
+                                                                <span className={`font-semibold ${isCompleted ? 'text-gray-600' : 'text-kumkum'}`}>இருப்பு:</span> {pooja.sponsorCurrentAddress}
+                                                            </span>
+                                                        )}
+                                                        {pooja.sponsorPermanentAddress && (
+                                                            <span className="block text-gray-500 text-xs mt-1">
+                                                                <span className={`font-semibold ${isCompleted ? 'text-gray-600' : 'text-kumkum'}`}>சொந்த ஊர்:</span> {pooja.sponsorPermanentAddress}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                         {pooja.description && <p className="text-gray-600 text-sm mt-3 bg-white p-3 rounded border border-gray-100 shadow-sm">{pooja.description}</p>}
                                     </div>

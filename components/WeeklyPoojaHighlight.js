@@ -119,14 +119,27 @@ export default function WeeklyPoojaHighlight() {
                                 <span>{nextPooja.date} {nextPooja.time && ` | ${formatTime(nextPooja.time)}`}</span>
                             </div>
 
-                            <div className="flex items-center gap-3 text-gray-700 md:col-span-2">
-                                <User className="w-5 h-5 text-kumkum" />
-                                <div className="text-sm">
-                                    <span className="block">உபயதாரர்: <span className="font-semibold">{nextPooja.sponsor}</span>{nextPooja.sponsor2 && <span className="font-semibold"> & {nextPooja.sponsor2}</span>}</span>
-                                    {nextPooja.sponsorCurrentAddress && <span className="block text-gray-500 mt-1">இருப்பு: {nextPooja.sponsorCurrentAddress}</span>}
-                                    {nextPooja.sponsorPermanentAddress && <span className="block text-gray-500 mt-1">சொந்த ஊர்: {nextPooja.sponsorPermanentAddress}</span>}
+                            {/* Hide standard sponsor details for Shivaratri, show Annadhanam instead if present */}
+                            {nextPooja.title === 'சிவராத்திரி சிறப்பு பூஜை' ? (
+                                nextPooja.annadhanamDetails && (
+                                    <div className="flex items-center gap-3 text-gray-700 md:col-span-2 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                                        <User className="w-5 h-5 text-yellow-600" />
+                                        <div className="text-sm">
+                                            <span className="block font-bold text-yellow-800 mb-1">அன்னதானம் / சிறப்பு விவரங்கள்:</span>
+                                            <span className="block text-gray-800 leading-relaxed whitespace-pre-wrap">{nextPooja.annadhanamDetails}</span>
+                                        </div>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="flex items-center gap-3 text-gray-700 md:col-span-2">
+                                    <User className="w-5 h-5 text-kumkum" />
+                                    <div className="text-sm">
+                                        <span className="block">உபயதாரர்: <span className="font-semibold">{nextPooja.sponsor}</span>{nextPooja.sponsor2 && <span className="font-semibold"> & {nextPooja.sponsor2}</span>}</span>
+                                        {nextPooja.sponsorCurrentAddress && <span className="block text-gray-500 mt-1">இருப்பு: {nextPooja.sponsorCurrentAddress}</span>}
+                                        {nextPooja.sponsorPermanentAddress && <span className="block text-gray-500 mt-1">சொந்த ஊர்: {nextPooja.sponsorPermanentAddress}</span>}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -40,6 +40,7 @@ export default function AdminPage() {
     const [sponsorCurrentAddress, setSponsorCurrentAddress] = useState('');
     const [sponsorPermanentAddress, setSponsorPermanentAddress] = useState('');
     const [poojaDescription, setPoojaDescription] = useState('');
+    const [annadhanamDetails, setAnnadhanamDetails] = useState(''); // New State
     // Tamil Date State
     const [tamilMonth, setTamilMonth] = useState('');
     const [tamilDay, setTamilDay] = useState('');
@@ -209,8 +210,15 @@ export default function AdminPage() {
         setPoojaStatus(poojaEditingId ? 'Updating...' : 'Adding...');
 
         const finalTitle = poojaTitle === 'Other' ? poojaCustomTitle : poojaTitle;
-        const finalSponsor = poojaSponsor.trim().endsWith('குடும்பத்தார்') ? poojaSponsor : `${poojaSponsor} குடும்பத்தார்`;
-        const finalSponsor2 = poojaSponsor2.trim() ? (poojaSponsor2.trim().endsWith('குடும்பத்தார்') ? poojaSponsor2 : `${poojaSponsor2} குடும்பத்தார்`) : '';
+
+        // Only append 'Family' if NOT Shivaratri
+        let finalSponsor = poojaSponsor;
+        let finalSponsor2 = poojaSponsor2;
+
+        if (finalTitle !== 'சிவராத்திரி சிறப்பு பூஜை') {
+            finalSponsor = poojaSponsor.trim().endsWith('குடும்பத்தார்') ? poojaSponsor : (poojaSponsor.trim() ? `${poojaSponsor} குடும்பத்தார்` : '');
+            finalSponsor2 = poojaSponsor2.trim() ? (poojaSponsor2.trim().endsWith('குடும்பத்தார்') ? poojaSponsor2 : `${poojaSponsor2} குடும்பத்தார்`) : '';
+        }
 
         // Construct Tamil Month Date only if both are selected
         let finalTamilDate = '';
@@ -228,6 +236,7 @@ export default function AdminPage() {
             sponsorCurrentAddress,
             sponsorPermanentAddress,
             description: poojaDescription,
+            annadhanamDetails: annadhanamDetails, // Save new field
             tamilMonthDate: finalTamilDate, // Can be empty string now
             updatedAt: serverTimestamp()
         };
@@ -252,8 +261,8 @@ export default function AdminPage() {
     };
 
     const handleEditPooja = (pooja) => {
-        setPoojaTitle(['பிரதோஷ வழிபாடு', 'சிறப்பு பூஜை', 'சனிக்கிழமை பூஜை'].includes(pooja.title) ? pooja.title : 'Other');
-        if (!['பிரதோஷ வழிபாடு', 'சிறப்பு பூஜை', 'சனிக்கிழமை பூஜை'].includes(pooja.title)) {
+        setPoojaTitle(['பிரதோஷ வழிபாடு', 'சிறப்பு பூஜை', 'சனிக்கிழமை பூஜை', 'சிவராத்திரி சிறப்பு பூஜை'].includes(pooja.title) ? pooja.title : 'Other');
+        if (!['பிரதோஷ வழிபாடு', 'சிறப்பு பூஜை', 'சனிக்கிழமை பூஜை', 'சிவராத்திரி சிறப்பு பூஜை'].includes(pooja.title)) {
             setPoojaCustomTitle(pooja.title);
         }
         setPoojaDate(pooja.date || '');
@@ -264,6 +273,7 @@ export default function AdminPage() {
         setSponsorCurrentAddress(pooja.sponsorCurrentAddress || '');
         setSponsorPermanentAddress(pooja.sponsorPermanentAddress || '');
         setPoojaDescription(pooja.description || '');
+        setAnnadhanamDetails(pooja.annadhanamDetails || ''); // Load edit data
 
         // Reset defaults
         setTamilMonth('');
@@ -281,7 +291,10 @@ export default function AdminPage() {
 
     const handleDeletePooja = async (id) => {
         if (!confirm('Delete this pooja?')) return;
-        try { await deleteDoc(doc(db, "poojas", id)); } catch (err) { console.error(err); }
+        try {
+            await deleteDoc(doc(db, "poojas", id));
+            if (poojaEditingId === id) resetPoojaForm();
+        } catch (err) { console.error(err); }
     };
 
     const resetPoojaForm = () => {
@@ -295,6 +308,7 @@ export default function AdminPage() {
         setSponsorCurrentAddress('');
         setSponsorPermanentAddress('');
         setPoojaDescription('');
+        setAnnadhanamDetails(''); // Reset new field
         setTamilMonth(''); // Start empty
         setTamilDay('');   // Start empty
         setPoojaEditingId(null);
@@ -560,6 +574,7 @@ export default function AdminPage() {
                                                     <option value="பிரதோஷ வழிபாடு">பிரதோஷ வழிபாடு</option>
                                                     <option value="சிறப்பு பூஜை">சிறப்பு பூஜை</option>
                                                     <option value="சனிக்கிழமை பூஜை">சனிக்கிழமை பூஜை</option>
+                                                    <option value="சிவராத்திரி சிறப்பு பூஜை">சிவராத்திரி சிறப்பு பூஜை</option>
                                                     <option value="Other">Other (Custom)</option>
                                                 </select>
                                                 <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
@@ -624,6 +639,22 @@ export default function AdminPage() {
                                             <div className="mt-2 text-xs text-kumkum font-medium text-right">+ குடும்பத்தார் (Auto-added)</div>
                                         </div>
                                     </div>
+
+                                    {/* Annadhanam Details - Show only for Shivaratri */}
+                                    {poojaTitle === 'சிவராத்திரி சிறப்பு பூஜை' && (
+                                        <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Annadhanam / Special Details</label>
+                                            <SafeTransliterate
+                                                value={annadhanamDetails}
+                                                onChangeText={(text) => setAnnadhanamDetails(text)}
+                                                placeholder="Enter Annadhanam details... (Tanglish)"
+                                                rows="2"
+                                                renderComponent={(props) => <textarea {...props} />}
+                                                className="w-full p-3 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 bg-white"
+                                                containerClassName="w-full"
+                                            />
+                                        </div>
+                                    )}
 
                                     {/* Addresses */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -718,10 +749,22 @@ export default function AdminPage() {
                                                 <div className="text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8">
                                                     <span className="flex items-center gap-2"><Calendar size={14} className="text-orange-400" /> {pooja.date} ({pooja.tamilMonthDate})</span>
                                                     <span className="flex items-center gap-2"><Clock size={14} className="text-orange-400" /> {formatTime(pooja.time)}</span>
-                                                    <span className="md:col-span-2 flex items-center gap-2 font-medium">
-                                                        <User size={14} className="text-orange-400" />
-                                                        <span>{pooja.sponsor} {pooja.sponsor2 && `& ${pooja.sponsor2}`}</span>
-                                                    </span>
+
+                                                    {/* Condition to show Annadhanam or Sponsor */}
+                                                    {pooja.title === 'சிவராத்திரி சிறப்பு பூஜை' && pooja.annadhanamDetails ? (
+                                                        <span className="md:col-span-2 flex items-start gap-2 bg-yellow-50 p-2 rounded border border-yellow-100 mt-2">
+                                                            <User size={14} className="text-yellow-600 mt-1 shrink-0" />
+                                                            <div>
+                                                                <span className="block font-bold text-xs text-yellow-800">Special / Annadhanam:</span>
+                                                                <span className="text-gray-700 whitespace-pre-wrap">{pooja.annadhanamDetails}</span>
+                                                            </div>
+                                                        </span>
+                                                    ) : (
+                                                        <span className="md:col-span-2 flex items-center gap-2 font-medium">
+                                                            <User size={14} className="text-orange-400" />
+                                                            <span>{pooja.sponsor} {pooja.sponsor2 && `& ${pooja.sponsor2}`}</span>
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
