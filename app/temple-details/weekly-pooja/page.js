@@ -134,11 +134,43 @@ export default function WeeklyPoojaPage() {
                                 <>
                                     {/* Upcoming Section */}
                                     {upcomingList.length > 0 ? (
-                                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-                                            {upcomingList.map(p => renderPoojaCard(p, false))}
+                                        <div className="mb-12 space-y-12">
+                                            {(() => {
+                                                // Group by Tamil Month + Year
+                                                const grouped = {};
+                                                upcomingList.forEach(pooja => {
+                                                    const monthName = pooja.tamilMonthDate ? pooja.tamilMonthDate.split(' ')[0] : 'General';
+                                                    const year = pooja.date.split('-')[0];
+                                                    const key = monthName === 'General' ? 'General' : `${monthName}|${year}`;
+
+                                                    if (!grouped[key]) grouped[key] = [];
+                                                    grouped[key].push(pooja);
+                                                });
+
+                                                return Object.keys(grouped).map(key => {
+                                                    const [month, year] = key.split('|');
+                                                    return (
+                                                        <div key={key} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                                            <div className="flex items-center gap-4 mb-6">
+                                                                <div className="h-px bg-orange-200 flex-1"></div>
+                                                                <h3 className="text-xl md:text-2xl font-bold text-kumkum uppercase tracking-wider px-4 py-1 bg-orange-50 rounded-full border border-orange-100 shadow-sm">
+                                                                    {month === 'General' ? 'Upcoming Poojas' : `${month} மாதம் ${year}`}
+                                                                </h3>
+                                                                <div className="h-px bg-orange-200 flex-1"></div>
+                                                            </div>
+
+                                                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                                                {grouped[key].map(p => renderPoojaCard(p, false))}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                });
+                                            })()}
                                         </div>
                                     ) : (
-                                        <p className="text-gray-500 italic bg-gray-50 p-6 rounded-lg mb-12">No upcoming poojas scheduled.</p>
+                                        <p className="text-gray-500 italic bg-gray-50 p-6 rounded-lg mb-12 text-center border border-dashed border-gray-200">
+                                            No upcoming poojas scheduled at the moment.
+                                        </p>
                                     )}
 
                                     {/* Past Section */}

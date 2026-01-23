@@ -7,6 +7,7 @@ export default function GalleryPreview() {
         { type: 'image', src: '/temple_1.jpg', alt: 'Temple Main View' },
         { type: 'image', src: '/temple_2.png', alt: 'Deity Altar' },
         { type: 'image', src: '/temple_3.jpg', alt: 'Festival Celebration' },
+        { type: 'image', src: '/temple_4.jpg', alt: 'Perumal Alankaram' },
         {
             type: 'video',
             src: '/temple.mp4',

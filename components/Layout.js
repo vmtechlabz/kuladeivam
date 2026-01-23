@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, Home, Info, Calendar, Bell, Heart, Users } from 'lucide-react';
+import { Menu, X, Home, Info, Calendar, Bell, Heart, Users, Instagram } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout({ children }) {
@@ -33,13 +33,13 @@ export default function Layout({ children }) {
         <div className="min-h-screen flex flex-col font-sans bg-amber-50">
             {/* Navbar */}
             <nav className="bg-kumkum text-white shadow-lg sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 items-center justify-between gap-8">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="flex min-h-16 py-2 items-center justify-between gap-2 md:gap-8">
                         {/* Title Section - Allowed to shrink */}
-                        <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                        <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/1.png" alt="Logo" className="w-20 h-20 object-contain drop-shadow-md" />
-                            <span className="text-sm md:text-xl font-bold truncate">
+                            <img src="/1.png" alt="Logo" className="w-12 h-12 md:w-20 md:h-20 object-contain drop-shadow-md shrink-0" />
+                            <span className="text-sm md:text-xl font-bold text-left leading-tight whitespace-normal break-words">
                                 ஸ்ரீ தேவி பூதேவி சமேத ஸ்ரீ வரதராஜப் பெருமாள் திருக்கோவில்
                             </span>
                         </div>
@@ -168,6 +168,12 @@ export default function Layout({ children }) {
                     <p className="text-lg font-medium text-gold mb-4 italic">
                         "பாரம்பரியத்தைப் பாதுகாத்தல், ஆன்மீகத்தை வளர்த்தல் மற்றும் பக்தியுடன் சமூகத்திற்குச் சேவை செய்தல்."
                     </p>
+                    <div className="flex justify-center gap-6 mb-6">
+                        <a href="https://www.instagram.com/kulathaivam_varatharajaperumal/?hl=en" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-500 transition-colors">
+                            <Instagram size={24} />
+                            <span className="sr-only">Instagram</span>
+                        </a>
+                    </div>
                     <p className="mb-2 text-sm text-gray-400">
                         © {new Date().getFullYear()} ஸ்ரீ தேவி பூதேவி சமேத ஸ்ரீ வரதராஜப் பெருமாள் திருக்கோவில். அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை. | பக்தியுடன் உருவாக்கப்பட்டது.
                     </p>

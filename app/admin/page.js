@@ -6,7 +6,9 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Trash2, Edit2, X, Calendar, Clock, MapPin, User, FileText, Globe, image as ImageIcon, Video, Upload, AlertCircle, Users } from 'lucide-react';
+
 import SafeTransliterate from '@/components/SafeTransliterate';
+import { getTamilDate } from '@/utils/tamilDateUtils';
 
 export default function AdminPage() {
     const [email, setEmail] = useState('');
@@ -22,6 +24,9 @@ export default function AdminPage() {
     const [deletingIds, setDeletingIds] = useState(new Set());
     const [editingId, setEditingId] = useState(null);
 
+    // Custom Delete Confirmation State
+    const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, id: null, type: null, isLoading: false });
+
     // Weekly Pooja State
     const [activeTab, setActiveTab] = useState('notices'); // 'notices' | 'pooja' | 'gallery'
     const [poojas, setPoojas] = useState([]);
@@ -33,6 +38,9 @@ export default function AdminPage() {
     const [poojaCustomTitle, setPoojaCustomTitle] = useState('');
     const [poojaDate, setPoojaDate] = useState('');
     const [poojaTime, setPoojaTime] = useState('');
+
+    // Multi-Sponsor State
+    const [sponsors, setSponsors] = useState([{ prefix: 'திரு', name: '' }]);
 
     const [poojaSponsor, setPoojaSponsor] = useState('');
     const [poojaSponsor2, setPoojaSponsor2] = useState('');
@@ -62,7 +70,19 @@ export default function AdminPage() {
     const [memberRole, setMemberRole] = useState('');
     const [memberLocation, setMemberLocation] = useState('');
     const [memberPhone, setMemberPhone] = useState('');
+
     const [committeeStatus, setCommitteeStatus] = useState('');
+
+    // Effect: Auto-calculate Tamil Date when Gregorian Date changes
+    useEffect(() => {
+        if (poojaDate) {
+            const tDate = getTamilDate(poojaDate);
+            if (tDate) {
+                setTamilMonth(tDate.month);
+                setTamilDay(tDate.day);
+            }
+        }
+    }, [poojaDate]);
 
     useEffect(() => {
         if (!user) return;
@@ -135,9 +155,40 @@ export default function AdminPage() {
         }
     };
 
+    const handleRestore = async () => {
+        if (!confirm('Are you sure you want to restore default poojas? This is for recovery purposes.')) return;
+        setLoading(true);
+        try {
+            const batch = writeBatch(db);
+            const poojasRef = collection(db, "poojas");
+            const data = [
+                { title: "தை முதல் நாள்", date: "2026-01-15", time: "06:00", tamilMonthDate: "தை 1", description: "Special pooja for Thai 1", sponsor: "Admin Restore" },
+                { title: "மாசி மாத பிறப்பு", date: "2026-02-13", time: "06:00", tamilMonthDate: "மாசி 1", description: "Special pooja for Masi 1", sponsor: "Admin Restore" },
+                { title: "பங்குனி உத்திரம்", date: "2026-03-15", time: "06:00", tamilMonthDate: "பங்குனி 1", description: "Special pooja for Panguni 1", sponsor: "Admin Restore" },
+                { title: "தமிழிப் புத்தாண்டு", date: "2026-04-14", time: "06:00", tamilMonthDate: "சித்திரை 1", description: "Tamil New Year", sponsor: "Admin Restore" },
+                { title: "வைகாசி விசாகம்", date: "2026-05-15", time: "06:00", tamilMonthDate: "வைகாசி 1", description: "Vaikasi Visakam", sponsor: "Admin Restore" }
+            ];
+
+            data.forEach(item => {
+                const newDocRef = doc(poojasRef);
+                batch.set(newDocRef, { ...item, createdAt: serverTimestamp() });
+            });
+
+            await batch.commit();
+            alert('Restoration Complete!');
+        } catch (e) {
+            console.error(e);
+            alert('Error restoring: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleLogout = async () => {
         await signOut(auth);
         setUser(null);
+        setEmail('');
+        setPassword('');
     };
 
     // --- NOTICE Handlers ---
@@ -210,12 +261,27 @@ export default function AdminPage() {
         const finalTitle = poojaTitle === 'Other' ? poojaCustomTitle : poojaTitle;
 
         // Only append 'Family' if NOT Shivaratri
+        // Only append 'Family' if NOT Shivaratri
         let finalSponsor = poojaSponsor;
-        let finalSponsor2 = poojaSponsor2;
+
+        // Construct Sponsor String from Array
+        // Format: "Prefix Name, Prefix Name" then append "Family" if needed
+        // For simpler backward compatibility, we will just join them and store in 'sponsor' field
+
+        const validSponsors = sponsors.filter(s => s.name && s.name.trim().length > 0);
+
+        if (validSponsors.length > 0) {
+            finalSponsor = validSponsors.map(s => `${s.prefix} ${s.name}`).join(', ');
+        }
+
+        let finalSponsor2 = ''; // Deprecated but kept empty or derived if needed
 
         if (finalTitle !== 'சிவராத்திரி சிறப்பு பூஜை') {
-            finalSponsor = poojaSponsor.trim().endsWith('குடும்பத்தார்') ? poojaSponsor : (poojaSponsor.trim() ? `${poojaSponsor} குடும்பத்தார்` : '');
-            finalSponsor2 = poojaSponsor2.trim() ? (poojaSponsor2.trim().endsWith('குடும்பத்தார்') ? poojaSponsor2 : `${poojaSponsor2} குடும்பத்தார்`) : '';
+            // If manual parsing fails or uses old fields, fallback is safe.
+            // Auto-append family if it's not already there?
+            if (validSponsors.length > 0 && !finalSponsor.includes('குடும்பத்தார்')) {
+                finalSponsor = `${finalSponsor} குடும்பத்தார்`;
+            }
         }
 
         // Construct Tamil Month Date only if both are selected
@@ -266,8 +332,29 @@ export default function AdminPage() {
         setPoojaDate(pooja.date || '');
         setPoojaTime(pooja.time || '');
 
-        setPoojaSponsor(pooja.sponsor.replace(' குடும்பத்தார்', '') || '');
-        setPoojaSponsor2((pooja.sponsor2 || '').replace(' குடும்பத்தார்', '') || '');
+        // Try to parse existing sponsor string
+        const sponsorText = pooja.sponsor ? pooja.sponsor.replace(' குடும்பத்தார்', '').trim() : '';
+        if (sponsorText) {
+            // Split by comma if multiple
+            const parts = sponsorText.split(',').map(s => s.trim());
+            const parsedSponsors = parts.map(part => {
+                const prefixes = ['திரு', 'திருமதி', 'செல்வன்', 'செல்வி'];
+                // Find if part starts with a known prefix
+                const foundPrefix = prefixes.find(p => part.startsWith(p));
+                if (foundPrefix) {
+                    return { prefix: foundPrefix, name: part.replace(foundPrefix, '').trim() };
+                } else {
+                    return { prefix: 'திரு', name: part }; // Default fallback
+                }
+            });
+            // Ensure at least one
+            if (parsedSponsors.length === 0) parsedSponsors.push({ prefix: 'திரு', name: '' });
+            setSponsors(parsedSponsors);
+        } else {
+            setSponsors([{ prefix: 'திரு', name: '' }]);
+        }
+
+        // setPoojaSponsor(pooja.sponsor.replace(' குடும்பத்தார்', '') || ''); // Deprecated view
         setSponsorCurrentAddress(pooja.sponsorCurrentAddress || '');
         setSponsorPermanentAddress(pooja.sponsorPermanentAddress || '');
         setPoojaDescription(pooja.description || '');
@@ -287,12 +374,32 @@ export default function AdminPage() {
         setPoojaEditingId(pooja.id);
     };
 
-    const handleDeletePooja = async (id) => {
-        if (!confirm('Delete this pooja?')) return;
+    const handleDeletePooja = (id) => {
+        // Instead of window.confirm, use custom modal
+        console.log("Requesting delete for:", id);
+        setDeleteConfirmation({ show: true, id, type: 'pooja', isLoading: false });
+    };
+
+    const confirmDelete = async () => {
+        const { id, type } = deleteConfirmation;
+        if (!id) return;
+
+        setDeleteConfirmation(prev => ({ ...prev, isLoading: true }));
+
         try {
-            await deleteDoc(doc(db, "poojas", id));
-            if (poojaEditingId === id) resetPoojaForm();
-        } catch (err) { console.error(err); }
+            if (type === 'pooja') {
+                console.log("Proceeding with delete for ID:", id);
+                await deleteDoc(doc(db, "poojas", id));
+                if (poojaEditingId === id) resetPoojaForm();
+                console.log("Delete successful");
+            }
+            // Reset modal
+            setDeleteConfirmation({ show: false, id: null, type: null, isLoading: false });
+        } catch (err) {
+            console.error("Error deleting:", err);
+            alert("Error deleting: " + err.message);
+            setDeleteConfirmation({ show: false, id: null, type: null, isLoading: false });
+        }
     };
 
     const resetPoojaForm = () => {
@@ -309,6 +416,9 @@ export default function AdminPage() {
         setAnnadhanamDetails(''); // Reset new field
         setTamilMonth(''); // Start empty
         setTamilDay('');   // Start empty
+
+        setSponsors([{ prefix: 'திரு', name: '' }]); // Reset sponsors
+
         setPoojaEditingId(null);
         setPoojaStatus('');
     };
@@ -601,40 +711,68 @@ export default function AdminPage() {
                                     </div>
 
                                     {/* Row 2 */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Sponsor Name</label>
-                                            <div className="flex items-center gap-2">
-                                                <User className="text-gray-400" size={20} />
-                                                <div className="flex-1">
-                                                    <SafeTransliterate
-                                                        renderComponent={(props) => <input {...props} />}
-                                                        value={poojaSponsor}
-                                                        onChangeText={(text) => setPoojaSponsor(text)}
-                                                        placeholder="Name (Tanglish)"
-                                                        className="w-full p-2 bg-transparent border-b border-orange-200 focus:border-kumkum outline-none"
-                                                        containerClassName="w-full"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="mt-2 text-xs text-kumkum font-medium text-right">+ குடும்பத்தார் (Auto-added)</div>
+                                    {/* Multi-Sponsor List */}
+                                    <div className="bg-orange-50/50 p-6 rounded-xl border border-orange-100">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <label className="block text-sm font-bold text-gray-800">Sponsors (Max 4)</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSponsors([...sponsors, { prefix: 'திரு', name: '' }])}
+                                                disabled={sponsors.length >= 4}
+                                                className="text-xs font-bold text-kumkum bg-white border border-orange-200 px-3 py-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-50"
+                                            >
+                                                + Add Sponsor
+                                            </button>
                                         </div>
-                                        <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Sponsor Name 2 (Optional)</label>
-                                            <div className="flex items-center gap-2">
-                                                <User className="text-gray-400" size={20} />
-                                                <div className="flex-1">
-                                                    <SafeTransliterate
-                                                        renderComponent={(props) => <input {...props} />}
-                                                        value={poojaSponsor2}
-                                                        onChangeText={(text) => setPoojaSponsor2(text)}
-                                                        placeholder="Name 2 (Tanglish)"
-                                                        className="w-full p-2 bg-transparent border-b border-orange-200 focus:border-kumkum outline-none"
-                                                        containerClassName="w-full"
-                                                    />
+
+                                        <div className="space-y-4">
+                                            {sponsors.map((sponsor, index) => (
+                                                <div key={index} className="flex gap-3 items-start relative bg-white p-3 rounded-lg border border-orange-100">
+                                                    <select
+                                                        value={sponsor.prefix}
+                                                        onChange={(e) => {
+                                                            const newSponsors = [...sponsors];
+                                                            newSponsors[index].prefix = e.target.value;
+                                                            setSponsors(newSponsors);
+                                                        }}
+                                                        className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm w-24 shrink-0 focus:ring-2 focus:ring-kumkum"
+                                                    >
+                                                        <option value="திரு">திரு</option>
+                                                        <option value="திருமதி">திருமதி</option>
+                                                        <option value="செல்வன்">செல்வன்</option>
+                                                        <option value="செல்வி">செல்வி</option>
+                                                    </select>
+
+                                                    <div className="flex-1">
+                                                        <SafeTransliterate
+                                                            renderComponent={(props) => <input {...props} />}
+                                                            value={sponsor.name}
+                                                            onChangeText={(text) => {
+                                                                const newSponsors = [...sponsors];
+                                                                newSponsors[index].name = text;
+                                                                setSponsors(newSponsors);
+                                                            }}
+                                                            placeholder="Sponsor Name (Tanglish)"
+                                                            className="w-full p-2 bg-transparent border-b border-gray-100 focus:border-kumkum outline-none text-sm"
+                                                            containerClassName="w-full"
+                                                        />
+                                                    </div>
+
+                                                    {sponsors.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newSponsors = sponsors.filter((_, i) => i !== index);
+                                                                setSponsors(newSponsors);
+                                                            }}
+                                                            className="text-red-400 hover:text-red-600 p-1"
+                                                        >
+                                                            <X size={16} />
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            </div>
-                                            <div className="mt-2 text-xs text-kumkum font-medium text-right">+ குடும்பத்தார் (Auto-added)</div>
+                                            ))}
+                                            <div className="text-xs text-center text-kumkum font-medium mt-1">+ குடும்பத்தார் (Will be appended automatically)</div>
                                         </div>
                                     </div>
 
@@ -745,7 +883,11 @@ export default function AdminPage() {
                                                 </div>
                                                 <h3 className="font-bold text-lg text-kumkum mb-2">{pooja.title}</h3>
                                                 <div className="text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8">
-                                                    <span className="flex items-center gap-2"><Calendar size={14} className="text-orange-400" /> {pooja.date} ({pooja.tamilMonthDate})</span>
+                                                    <span className="flex items-center gap-2">
+                                                        <Calendar size={14} className="text-orange-400" />
+                                                        {pooja.date} ({pooja.tamilMonthDate})
+                                                        <span className="text-[10px] text-gray-300 ml-1 font-mono">ID: {pooja.id.slice(0, 4)}...</span>
+                                                    </span>
                                                     <span className="flex items-center gap-2"><Clock size={14} className="text-orange-400" /> {formatTime(pooja.time)}</span>
 
                                                     {/* Condition to show Annadhanam or Sponsor */}
@@ -772,8 +914,34 @@ export default function AdminPage() {
                                                 <div>
                                                     <h4 className="font-bold text-gray-500 uppercase text-xs tracking-wider border-b border-gray-100 pb-2 mb-4">Upcoming Schedule</h4>
                                                     {upcomingPoojas.length === 0 ? <p className="text-gray-400 text-center py-6 bg-gray-50 rounded-xl">No upcoming poojas.</p> : (
-                                                        <div className="grid grid-cols-1 gap-4">
-                                                            {upcomingPoojas.map(renderPoojaCard)}
+                                                        <div className="space-y-8">
+                                                            {(() => {
+                                                                // Group by Tamil Month + Year
+                                                                const grouped = {};
+                                                                upcomingPoojas.forEach(pooja => {
+                                                                    const monthName = pooja.tamilMonthDate ? pooja.tamilMonthDate.split(' ')[0] : 'General';
+                                                                    const year = pooja.date.split('-')[0];
+                                                                    const key = monthName === 'General' ? 'General' : `${monthName}|${year}`;
+
+                                                                    if (!grouped[key]) grouped[key] = [];
+                                                                    grouped[key].push(pooja);
+                                                                });
+
+                                                                return Object.keys(grouped).map(key => {
+                                                                    const [month, year] = key.split('|');
+                                                                    return (
+                                                                        <div key={key}>
+                                                                            <h5 className="font-bold text-lg text-gray-800 mb-3 flex items-center gap-2">
+                                                                                <span className="w-2 h-2 rounded-full bg-kumkum"></span>
+                                                                                {month === 'General' ? 'General' : `${month} மாதம் ${year}`}
+                                                                            </h5>
+                                                                            <div className="grid grid-cols-1 gap-4 pl-4 border-l-2 border-orange-50">
+                                                                                {grouped[key].map(renderPoojaCard)}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                });
+                                                            })()}
                                                         </div>
                                                     )}
                                                 </div>
@@ -883,6 +1051,49 @@ export default function AdminPage() {
                         </div>
                     )}
 
+
+                    {/* Custom Delete Confirmation Modal */}
+                    {deleteConfirmation.show && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                            <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full transform transition-all scale-100 border border-red-100">
+                                <div className="flex items-center gap-3 mb-4 text-red-600">
+                                    <div className="bg-red-50 p-3 rounded-full">
+                                        <Trash2 size={24} />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900">Confirm Delete</h3>
+                                </div>
+
+                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                    Are you sure you want to delete this {deleteConfirmation.type}? <br />
+                                    <span className="text-xs font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-500 mt-2 block w-fit">ID: {deleteConfirmation.id}</span>
+                                </p>
+
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setDeleteConfirmation({ show: false, id: null, type: null, isLoading: false })}
+                                        disabled={deleteConfirmation.isLoading}
+                                        className="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={confirmDelete}
+                                        disabled={deleteConfirmation.isLoading}
+                                        className="px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all transform active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center gap-2"
+                                    >
+                                        {deleteConfirmation.isLoading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                                                <span>Deleting...</span>
+                                            </>
+                                        ) : (
+                                            "Yes, Delete It"
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         );
