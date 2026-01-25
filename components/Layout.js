@@ -178,7 +178,7 @@ export default function Layout({ children }) {
                         © {new Date().getFullYear()} ஸ்ரீ தேவி பூதேவி சமேத ஸ்ரீ வரதராஜப் பெருமாள் திருக்கோவில். அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை. | பக்தியுடன் உருவாக்கப்பட்டது.
                     </p>
                     <p className="text-xs text-gray-500 mt-4 border-t border-gray-800 pt-4">
-                        Developed by <a href="#" className="text-orange-400 hover:text-gold font-bold transition-colors tracking-wide bg-gradient-to-r from-orange-400 to-yellow-300 bg-clip-text text-transparent">VM TechLabs</a>
+                        Developed by <a href="https://www.vmtechlabs.com" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-gold font-bold transition-colors tracking-wide bg-gradient-to-r from-orange-400 to-yellow-300 bg-clip-text text-transparent">VM TechLabs</a>
                     </p>
                 </div>
             </footer>
