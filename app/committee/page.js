@@ -33,6 +33,16 @@ export default function CommitteePage() {
         fetchMembers();
     }, []);
 
+    const membersWithRole = members.filter((member) => member.role?.trim());
+    const membersWithoutRole = members.filter((member) => !member.role?.trim());
+
+    const groupedMembers = membersWithRole.reduce((acc, member) => {
+        const village = member.location?.trim() || 'மற்றவை';
+        if (!acc[village]) acc[village] = [];
+        acc[village].push(member);
+        return acc;
+    }, {});
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center mb-12">
@@ -54,42 +64,73 @@ export default function CommitteePage() {
                     <p className="text-gray-500">உறுப்பினர்கள் விவரம் விரைவில் இணைக்கப்படும்.</p>
                 </div>
             ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16">
-                    {members.map((member) => (
-                        <div key={member.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all hover:border-orange-200 group">
-                            <div className="flex flex-col h-full">
-                                <div className="mb-4">
-                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-kumkum transition-colors">{member.name}</h3>
-                                    <span className="inline-block bg-orange-50 text-kumkum px-3 py-1 rounded-full text-sm font-semibold mt-2 border border-orange-100">
-                                        {member.role}
-                                    </span>
-                                </div>
+                <div className="space-y-10 mb-16">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Object.entries(groupedMembers).map(([village, villageMembers]) => (
+                            <section key={village} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                                <h2 className="text-xl font-bold text-kumkum mb-4 flex items-center gap-2">
+                                    <MapPin className="w-5 h-5" />
+                                    {village}
+                                </h2>
+                                <div className="space-y-4">
+                                    {villageMembers.map((member) => (
+                                        <div key={member.id} className="rounded-lg border border-gray-100 p-4 hover:border-orange-200 transition-all group">
+                                            <div className="flex flex-col h-full">
+                                                <h3 className="text-xl font-bold text-gray-900 group-hover:text-kumkum transition-colors">
+                                                    {member.name}
+                                                </h3>
+                                                <span className="inline-block bg-orange-50 text-kumkum px-3 py-1 rounded-full text-sm font-semibold mt-2 border border-orange-100 w-fit">
+                                                    {member.role}
+                                                </span>
 
-                                <div className="space-y-3 mt-auto pt-4 border-t border-gray-50">
-                                    <div className="flex items-center gap-3 text-gray-600">
-                                        <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
-                                        <span>{member.location}</span>
-                                    </div>
-                                    {member.phone && (
-                                        <div className="flex items-center gap-3 text-gray-600">
-                                            <Phone className="w-4 h-4 text-orange-400 shrink-0" />
-                                            <a href={`tel:${member.phone}`} className="hover:text-kumkum transition-colors font-medium">
-                                                {member.phone}
-                                            </a>
+                                                {member.phone && (
+                                                    <div className="flex items-center gap-3 text-gray-600 mt-4 pt-4 border-t border-gray-50">
+                                                        <Phone className="w-4 h-4 text-orange-400 shrink-0" />
+                                                        <a href={`tel:${member.phone}`} className="hover:text-kumkum transition-colors font-medium">
+                                                            {member.phone}
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
+                            </section>
+                        ))}
+                    </div>
+
+                    {membersWithoutRole.length > 0 && (
+                        <section>
+                            <h2 className="text-xl md:text-2xl font-bold text-kumkum mb-4">
+                                ஒவ்வொரு ஊர் சார்ந்த நிர்வாக குழு உறுப்பினர்கள் கீழ் வருமாறு:
+                            </h2>
+                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {membersWithoutRole.map((member) => (
+                                    <div key={member.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all hover:border-orange-200 group">
+                                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-kumkum transition-colors">
+                                            {member.name}
+                                        </h3>
+                                        {member.location && (
+                                            <div className="flex items-center gap-3 text-gray-600 mt-4">
+                                                <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
+                                                <span>{member.location}</span>
+                                            </div>
+                                        )}
+                                        {member.phone && (
+                                            <div className="flex items-center gap-3 text-gray-600 mt-3">
+                                                <Phone className="w-4 h-4 text-orange-400 shrink-0" />
+                                                <a href={`tel:${member.phone}`} className="hover:text-kumkum transition-colors font-medium">
+                                                    {member.phone}
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
-                        </div>
-                    ))}
+                        </section>
+                    )}
                 </div>
             )}
-
-            <div className="bg-amber-50 rounded-xl p-6 text-center border border-amber-100 max-w-3xl mx-auto">
-                <p className="text-gray-700 italic font-medium">
-                    "ஒவ்வொரு ஊர் சார்ந்த நிர்வாக குழு உறுப்பினர்கள் விரைவில் இங்கே சேர்க்கப்படுவார்கள்."
-                </p>
-            </div>
         </div>
     );
 }

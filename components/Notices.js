@@ -45,14 +45,14 @@ export default function Notices() {
 
     return (
         <div className="bg-amber-100 border-y border-amber-200 py-2 overflow-hidden relative flex items-center">
-            <div className="bg-amber-100 z-10 px-2 pl-4 flex items-center gap-2 text-kumkum font-bold whitespace-nowrap">
-                <Bell className="w-5 h-5 animate-bounce" />
-                <span>அறிவிப்புகள்:</span>
+            <div className="bg-amber-100 z-10 px-2 pl-3 md:pl-4 flex items-center gap-1.5 md:gap-2 text-kumkum font-bold whitespace-nowrap">
+                <Bell className="w-4 h-4 md:w-5 md:h-5 animate-bounce" />
+                <span className="text-sm md:text-base">அறிவிப்புகள்:</span>
             </div>
             <div className="whitespace-nowrap flex animate-marquee">
                 {/* Repeating the notices to ensure smooth loop if content is short */}
                 {[...notices, ...notices, ...notices].map((notice, index) => (
-                    <span key={index} className="mx-8 text-lg font-medium text-gray-800">
+                    <span key={index} className="mx-5 md:mx-8 text-sm md:text-lg font-medium text-gray-800">
                         • {notice}
                     </span>
                 ))}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { auth, db, storage } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
@@ -11,6 +11,7 @@ import SafeTransliterate from '@/components/SafeTransliterate';
 import { getTamilDate } from '@/utils/tamilDateUtils';
 
 export default function AdminPage() {
+    const poojaFormRef = useRef(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [user, setUser] = useState(null);
@@ -372,6 +373,11 @@ export default function AdminPage() {
             }
         }
         setPoojaEditingId(pooja.id);
+
+        // Move viewport to the pooja edit form on mobile after selecting a card
+        setTimeout(() => {
+            poojaFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
     };
 
     const handleDeletePooja = (id) => {
@@ -513,13 +519,20 @@ export default function AdminPage() {
     // --- COMMITTEE Handlers ---
     const handleSaveMember = async (e) => {
         e.preventDefault();
-        if (!memberName.trim() || !memberRole.trim()) return;
+        if (!memberName.trim()) {
+            setCommitteeStatus('Error: Member name is required.');
+            return;
+        }
+        if (!/^\d{10}$/.test(memberPhone)) {
+            setCommitteeStatus('Error: Phone number must be exactly 10 digits.');
+            return;
+        }
         setCommitteeStatus('Adding...');
 
         try {
             await addDoc(collection(db, "committee"), {
                 name: memberName,
-                role: memberRole,
+                role: memberRole.trim(),
                 location: memberLocation,
                 phone: memberPhone,
                 createdAt: serverTimestamp()
@@ -629,16 +642,16 @@ export default function AdminPage() {
                                     ) : (
                                         <ul className="grid gap-4">
                                             {notices.map((notice) => (
-                                                <li key={notice.id} className="group flex justify-between items-start p-5 rounded-xl border border-gray-100 bg-white hover:border-orange-200 hover:shadow-md transition-all duration-200 relative">
-                                                    <div className="flex-1 pr-8">
+                                                <li key={notice.id} className="group flex justify-between items-start gap-3 p-5 rounded-xl border border-gray-100 bg-white hover:border-orange-200 hover:shadow-md transition-all duration-200">
+                                                    <div className="flex-1 min-w-0">
                                                         <p className="text-gray-800 text-base leading-relaxed whitespace-pre-wrap">{notice.content}</p>
                                                         <span className="text-xs text-gray-400 mt-2 block font-medium">Posted: {notice.createdAt?.toDate().toLocaleDateString()}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 md:relative md:top-auto md:right-auto bg-white md:bg-transparent p-1 md:p-0 rounded-lg shadow-sm md:shadow-none border md:border-none border-gray-100">
-                                                        <button onClick={() => handleEditClick(notice)} className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-colors" title="Edit">
+                                                    <div className="flex items-center gap-2 shrink-0 self-start">
+                                                        <button onClick={() => handleEditClick(notice)} className="text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Edit">
                                                             <Edit2 size={18} />
                                                         </button>
-                                                        <button onClick={() => handleDeleteNotice(notice.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete">
+                                                        <button onClick={() => handleDeleteNotice(notice.id)} className="text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Delete">
                                                             <Trash2 size={18} />
                                                         </button>
                                                     </div>
@@ -668,7 +681,7 @@ export default function AdminPage() {
                             </div>
 
                             <div className="p-8">
-                                <form onSubmit={handleSavePooja} className="space-y-6 mb-10">
+                                <form ref={poojaFormRef} onSubmit={handleSavePooja} className="space-y-6 mb-10 scroll-mt-24">
                                     {/* Row 1 */}
                                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                                         <div className="md:col-span-6">
@@ -877,11 +890,13 @@ export default function AdminPage() {
 
                                         const renderPoojaCard = (pooja) => (
                                             <div key={pooja.id} className={`p-5 rounded-2xl border transition-all relative ${poojaEditingId === pooja.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 hover:border-orange-200 hover:shadow-md'}`}>
-                                                <div className="absolute top-4 right-4 flex gap-2">
-                                                    <button onClick={() => handleEditPooja(pooja)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg"><Edit2 size={16} /></button>
-                                                    <button onClick={() => handleDeletePooja(pooja.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg"><Trash2 size={16} /></button>
+                                                <div className="flex items-start justify-between gap-3 mb-2">
+                                                    <h3 className="font-bold text-lg text-kumkum leading-tight break-words">{pooja.title}</h3>
+                                                    <div className="flex gap-2 shrink-0 self-start">
+                                                        <button onClick={() => handleEditPooja(pooja)} className="text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 p-2 rounded-lg"><Edit2 size={16} /></button>
+                                                        <button onClick={() => handleDeletePooja(pooja.id)} className="text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 p-2 rounded-lg"><Trash2 size={16} /></button>
+                                                    </div>
                                                 </div>
-                                                <h3 className="font-bold text-lg text-kumkum mb-2">{pooja.title}</h3>
                                                 <div className="text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8">
                                                     <span className="flex items-center gap-2">
                                                         <Calendar size={14} className="text-orange-400" />
@@ -1010,8 +1025,12 @@ export default function AdminPage() {
                                             <input
                                                 type="tel"
                                                 value={memberPhone}
-                                                onChange={(e) => setMemberPhone(e.target.value)}
+                                                onChange={(e) => setMemberPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                                                 placeholder="Mobile Number"
+                                                inputMode="numeric"
+                                                pattern="[0-9]{10}"
+                                                maxLength={10}
+                                                required
                                                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
                                             />
                                         </div>
