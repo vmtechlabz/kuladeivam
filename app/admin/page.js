@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { auth, db, storage } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
@@ -11,6 +11,7 @@ import SafeTransliterate from '@/components/SafeTransliterate';
 import { getTamilDate } from '@/utils/tamilDateUtils';
 
 export default function AdminPage() {
+    const poojaFormRef = useRef(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [user, setUser] = useState(null);
@@ -372,6 +373,11 @@ export default function AdminPage() {
             }
         }
         setPoojaEditingId(pooja.id);
+
+        // Move viewport to the pooja edit form on mobile after selecting a card
+        setTimeout(() => {
+            poojaFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
     };
 
     const handleDeletePooja = (id) => {
@@ -513,13 +519,20 @@ export default function AdminPage() {
     // --- COMMITTEE Handlers ---
     const handleSaveMember = async (e) => {
         e.preventDefault();
-        if (!memberName.trim() || !memberRole.trim()) return;
+        if (!memberName.trim()) {
+            setCommitteeStatus('Error: Member name is required.');
+            return;
+        }
+        if (!/^\d{10}$/.test(memberPhone)) {
+            setCommitteeStatus('Error: Phone number must be exactly 10 digits.');
+            return;
+        }
         setCommitteeStatus('Adding...');
 
         try {
             await addDoc(collection(db, "committee"), {
                 name: memberName,
-                role: memberRole,
+                role: memberRole.trim(),
                 location: memberLocation,
                 phone: memberPhone,
                 createdAt: serverTimestamp()
@@ -608,7 +621,7 @@ export default function AdminPage() {
                                         placeholder="Type notice content (Tanglish)..."
                                         rows="4"
                                         renderComponent={(props) => <textarea {...props} />}
-                                        className={`w-full p-5 border rounded-xl focus:ring-4 focus:ring-orange-100 outline-none transition-all text-lg leading-relaxed shadow-inner ${editingId ? 'border-kumkum bg-orange-50/30' : 'border-gray-200'}`}
+                                        className={`w-full p-5 border rounded-xl focus:ring-4 focus:ring-orange-100 outline-none transition-all text-lg leading-relaxed shadow-inner text-gray-900 ${editingId ? 'border-kumkum bg-orange-50/30' : 'border-gray-200'}`}
                                         containerClassName="w-full"
                                     />
                                     <div className="flex justify-between items-center mt-4">
@@ -629,16 +642,16 @@ export default function AdminPage() {
                                     ) : (
                                         <ul className="grid gap-4">
                                             {notices.map((notice) => (
-                                                <li key={notice.id} className="group flex justify-between items-start p-5 rounded-xl border border-gray-100 bg-white hover:border-orange-200 hover:shadow-md transition-all duration-200 relative">
-                                                    <div className="flex-1 pr-8">
+                                                <li key={notice.id} className="group flex justify-between items-start gap-3 p-5 rounded-xl border border-gray-100 bg-white hover:border-orange-200 hover:shadow-md transition-all duration-200">
+                                                    <div className="flex-1 min-w-0">
                                                         <p className="text-gray-800 text-base leading-relaxed whitespace-pre-wrap">{notice.content}</p>
                                                         <span className="text-xs text-gray-400 mt-2 block font-medium">Posted: {notice.createdAt?.toDate().toLocaleDateString()}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 md:relative md:top-auto md:right-auto bg-white md:bg-transparent p-1 md:p-0 rounded-lg shadow-sm md:shadow-none border md:border-none border-gray-100">
-                                                        <button onClick={() => handleEditClick(notice)} className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-colors" title="Edit">
+                                                    <div className="flex items-center gap-2 shrink-0 self-start">
+                                                        <button onClick={() => handleEditClick(notice)} className="text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Edit">
                                                             <Edit2 size={18} />
                                                         </button>
-                                                        <button onClick={() => handleDeleteNotice(notice.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete">
+                                                        <button onClick={() => handleDeleteNotice(notice.id)} className="text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Delete">
                                                             <Trash2 size={18} />
                                                         </button>
                                                     </div>
@@ -668,7 +681,7 @@ export default function AdminPage() {
                             </div>
 
                             <div className="p-8">
-                                <form onSubmit={handleSavePooja} className="space-y-6 mb-10">
+                                <form ref={poojaFormRef} onSubmit={handleSavePooja} className="space-y-6 mb-10 scroll-mt-24">
                                     {/* Row 1 */}
                                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                                         <div className="md:col-span-6">
@@ -677,7 +690,7 @@ export default function AdminPage() {
                                                 <select
                                                     value={poojaTitle}
                                                     onChange={(e) => setPoojaTitle(e.target.value)}
-                                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum focus:bg-white transition-all appearance-none"
+                                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum focus:bg-white transition-all appearance-none text-gray-900"
                                                 >
                                                     <option value="பிரதோஷ வழிபாடு">பிரதோஷ வழிபாடு</option>
                                                     <option value="சிறப்பு பூஜை">சிறப்பு பூஜை</option>
@@ -694,7 +707,7 @@ export default function AdminPage() {
                                                         value={poojaCustomTitle}
                                                         onChangeText={(text) => setPoojaCustomTitle(text)}
                                                         placeholder="Enter Custom Title (Tanglish)"
-                                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                                         containerClassName="w-full"
                                                     />
                                                 </div>
@@ -702,11 +715,11 @@ export default function AdminPage() {
                                         </div>
                                         <div className="md:col-span-3">
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-                                            <input type="date" value={poojaDate} onChange={(e) => setPoojaDate(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum" required />
+                                            <input type="date" value={poojaDate} onChange={(e) => setPoojaDate(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900" required />
                                         </div>
                                         <div className="md:col-span-3">
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">Time</label>
-                                            <input type="time" value={poojaTime} onChange={(e) => setPoojaTime(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum" required />
+                                            <input type="time" value={poojaTime} onChange={(e) => setPoojaTime(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900" required />
                                         </div>
                                     </div>
 
@@ -735,7 +748,7 @@ export default function AdminPage() {
                                                             newSponsors[index].prefix = e.target.value;
                                                             setSponsors(newSponsors);
                                                         }}
-                                                        className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm w-24 shrink-0 focus:ring-2 focus:ring-kumkum"
+                                                        className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm w-24 shrink-0 focus:ring-2 focus:ring-kumkum text-gray-900"
                                                     >
                                                         <option value="திரு">திரு</option>
                                                         <option value="திருமதி">திருமதி</option>
@@ -753,7 +766,7 @@ export default function AdminPage() {
                                                                 setSponsors(newSponsors);
                                                             }}
                                                             placeholder="Sponsor Name (Tanglish)"
-                                                            className="w-full p-2 bg-transparent border-b border-gray-100 focus:border-kumkum outline-none text-sm"
+                                                            className="w-full p-2 bg-transparent border-b border-gray-100 focus:border-kumkum outline-none text-sm text-gray-900"
                                                             containerClassName="w-full"
                                                         />
                                                     </div>
@@ -786,7 +799,7 @@ export default function AdminPage() {
                                                 placeholder="Enter Annadhanam details... (Tanglish)"
                                                 rows="2"
                                                 renderComponent={(props) => <textarea {...props} />}
-                                                className="w-full p-3 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 bg-white"
+                                                className="w-full p-3 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
                                                 containerClassName="w-full"
                                             />
                                         </div>
@@ -800,7 +813,7 @@ export default function AdminPage() {
                                                 value={sponsorCurrentAddress}
                                                 onChangeText={(text) => setSponsorCurrentAddress(text)}
                                                 placeholder="Current Address (Tanglish)"
-                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                                 containerClassName="w-full"
                                             />
                                         </div>
@@ -810,7 +823,7 @@ export default function AdminPage() {
                                                 value={sponsorPermanentAddress}
                                                 onChangeText={(text) => setSponsorPermanentAddress(text)}
                                                 placeholder="Permanent Address (Tanglish)"
-                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                                 containerClassName="w-full"
                                             />
                                         </div>
@@ -823,7 +836,7 @@ export default function AdminPage() {
                                             <select
                                                 value={tamilMonth}
                                                 onChange={(e) => setTamilMonth(e.target.value)}
-                                                className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-40"
+                                                className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-40 text-gray-900"
                                             >
                                                 <option value="">Select Month</option>
                                                 {tamilMonths.map(m => <option key={m} value={m}>{m}</option>)}
@@ -831,7 +844,7 @@ export default function AdminPage() {
                                             <select
                                                 value={tamilDay}
                                                 onChange={(e) => setTamilDay(e.target.value)}
-                                                className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-20"
+                                                className="p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum w-20 text-gray-900"
                                             >
                                                 <option value="">Day</option>
                                                 {tamilDays.map(d => <option key={d} value={d}>{d}</option>)}
@@ -844,7 +857,7 @@ export default function AdminPage() {
                                         onChangeText={(text) => setPoojaDescription(text)}
                                         rows="3"
                                         renderComponent={(props) => <textarea {...props} />}
-                                        className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                        className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                         placeholder="Additional Description... (Tanglish)"
                                         containerClassName="w-full"
                                     />
@@ -877,11 +890,13 @@ export default function AdminPage() {
 
                                         const renderPoojaCard = (pooja) => (
                                             <div key={pooja.id} className={`p-5 rounded-2xl border transition-all relative ${poojaEditingId === pooja.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 hover:border-orange-200 hover:shadow-md'}`}>
-                                                <div className="absolute top-4 right-4 flex gap-2">
-                                                    <button onClick={() => handleEditPooja(pooja)} className="text-blue-500 hover:bg-blue-100 p-2 rounded-lg"><Edit2 size={16} /></button>
-                                                    <button onClick={() => handleDeletePooja(pooja.id)} className="text-red-500 hover:bg-red-100 p-2 rounded-lg"><Trash2 size={16} /></button>
+                                                <div className="flex items-start justify-between gap-3 mb-2">
+                                                    <h3 className="font-bold text-lg text-kumkum leading-tight break-words">{pooja.title}</h3>
+                                                    <div className="flex gap-2 shrink-0 self-start">
+                                                        <button onClick={() => handleEditPooja(pooja)} className="text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 p-2 rounded-lg"><Edit2 size={16} /></button>
+                                                        <button onClick={() => handleDeletePooja(pooja.id)} className="text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 p-2 rounded-lg"><Trash2 size={16} /></button>
+                                                    </div>
                                                 </div>
-                                                <h3 className="font-bold text-lg text-kumkum mb-2">{pooja.title}</h3>
                                                 <div className="text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8">
                                                     <span className="flex items-center gap-2">
                                                         <Calendar size={14} className="text-orange-400" />
@@ -981,7 +996,7 @@ export default function AdminPage() {
                                                 value={memberName}
                                                 onChangeText={(text) => setMemberName(text)}
                                                 placeholder="Name (Tanglish)"
-                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                                 containerClassName="w-full"
                                             />
                                         </div>
@@ -991,7 +1006,7 @@ export default function AdminPage() {
                                                 value={memberRole}
                                                 onChangeText={(text) => setMemberRole(text)}
                                                 placeholder="Role (Tanglish)"
-                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                                 containerClassName="w-full"
                                             />
                                         </div>
@@ -1001,7 +1016,7 @@ export default function AdminPage() {
                                                 value={memberLocation}
                                                 onChangeText={(text) => setMemberLocation(text)}
                                                 placeholder="Place (Tanglish)"
-                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                                 containerClassName="w-full"
                                             />
                                         </div>
@@ -1010,9 +1025,13 @@ export default function AdminPage() {
                                             <input
                                                 type="tel"
                                                 value={memberPhone}
-                                                onChange={(e) => setMemberPhone(e.target.value)}
+                                                onChange={(e) => setMemberPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                                                 placeholder="Mobile Number"
-                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum"
+                                                inputMode="numeric"
+                                                pattern="[0-9]{10}"
+                                                maxLength={10}
+                                                required
+                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-kumkum text-gray-900"
                                             />
                                         </div>
                                     </div>
@@ -1030,8 +1049,8 @@ export default function AdminPage() {
                                     {committeeMembers.length === 0 ? <p className="text-gray-400 text-center py-6">No members added yet.</p> : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {committeeMembers.map(member => (
-                                                <div key={member.id} className="p-5 rounded-xl border border-gray-100 bg-white hover:border-orange-200 hover:shadow-md transition-all relative flex justify-between items-start">
-                                                    <div>
+                                                <div key={member.id} className="p-5 rounded-xl border border-gray-100 bg-white hover:border-orange-200 hover:shadow-md transition-all relative flex justify-between items-start gap-4">
+                                                    <div className="flex-1 min-w-0">
                                                         <h3 className="font-bold text-lg text-gray-900">{member.name}</h3>
                                                         <p className="text-kumkum font-semibold text-sm mb-1">{member.role}</p>
                                                         <div className="text-sm text-gray-600 space-y-0.5">
@@ -1119,7 +1138,7 @@ export default function AdminPage() {
                             placeholder="Email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kumkum focus:border-transparent outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kumkum focus:border-transparent outline-none text-gray-900"
                             required
                         />
                     </div>
@@ -1129,7 +1148,7 @@ export default function AdminPage() {
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kumkum focus:border-transparent outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kumkum focus:border-transparent outline-none text-gray-900"
                             required
                         />
                     </div>
